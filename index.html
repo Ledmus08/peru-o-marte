@@ -231,7 +231,7 @@
     <script>
         let bgPlayer;
         let jumpscarePlayer;
-        let currentVolume = 25;
+        let currentVolume = 15;
         let experienceStarted = false; 
 
         function onYouTubeIframeAPIReady() {
@@ -338,11 +338,6 @@
 
             redFlash.classList.add("flash-active");
             gameContainer.classList.add("shake-active");
-            
-
-            currentVolume -= 20;
-            if (currentVolume < 10) currentVolume = 10;
-            if(bgPlayer && typeof bgPlayer.setVolume === 'function') bgPlayer.setVolume(currentVolume);
 
             setTimeout(() => {
                 redFlash.classList.remove("flash-active");

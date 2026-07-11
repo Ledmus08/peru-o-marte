@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¿Perú o Marte?</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #121212, #1c1c1c, #0a0a0a);
+            color: white;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #start-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000;
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: opacity 0.5s ease;
+        }
+        #start-screen h1 {
+            font-size: 2rem;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .hidden-player {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            width: 300px;
+            height: 300px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #red-flash {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(255, 0, 0, 0.6);
+            z-index: 9000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+        .flash-active { opacity: 1 !important; }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-3px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shake-active { animation: shake 0.4s; }
+
+        #emotes-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .emote {
+            position: absolute;
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
+        }
+
+        #game-container {
+            background: rgba(40, 40, 40, 0.4);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 700px;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+            z-index: 10;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        h1.title { font-size: 2.5rem; margin-bottom: 5px; color: #f0f0f0; }
+        #counter { font-size: 1.2rem; color: #888; font-weight: 600; margin-bottom: 20px; }
+
+        .image-wrapper {
+            position: relative; width: 100%; height: 350px;
+            border-radius: 15px; overflow: hidden; background: #000;
+            margin-bottom: 30px;
+        }
+        #main-image { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.4s ease; }
+
+        #feedback {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; opacity: 0;
+            pointer-events: none; transition: opacity 0.4s ease;
+        }
+        #feedback.show { opacity: 1; }
+        #feedback h3 { color: #ff4b4b; font-size: 2.5rem; margin-bottom: 15px; text-transform: uppercase; }
+        #feedback p { font-size: 1.4rem; color: #fff; font-weight: 600; }
+
+        .buttons { display: flex; gap: 20px; justify-content: center; }
+        button.choice-btn {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white; font-size: 1.2rem; font-weight: 600; padding: 15px 40px;
+            border-radius: 50px; cursor: pointer; transition: all 0.3s ease; flex: 1;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        button.choice-btn:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+
+        #final-popup {
+            background: #050505; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 50; display: none; flex-direction: column; justify-content: center;
+            align-items: center; text-align: center; opacity: 0; transition: opacity 1s ease;
+        }
+        #final-popup h2 { font-size: 2.5rem; color: white; margin-bottom: 20px; }
+        #final-popup img.pepe { border-radius: 10px; margin-bottom: 15px; width: 150px; }
+        #final-popup p { font-size: 1.2rem; margin: 5px 0; color: #ccc; }
+
+        #easy-mode-btn {
+            margin-top: 30px; background: #d30000; color: white; border: none;
+            padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 8px;
+            cursor: pointer; text-transform: uppercase; transition: background 0.3s;
+        }
+        #easy-mode-btn:hover { background: #ff1a1a; box-shadow: 0 0 15px rgba(255,0,0,0.6); }
+
+        #jumpscare {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 9999; background: black; display: none; justify-content: center; align-items: center;
+        }
+
+        /* ANIMACIÓN DE SACUDIDA PARA EL JUMPSCARE */
+        @keyframes jumpscare-shake {
+            0% { transform: translate(3px, 3px) rotate(0deg) scale(1.1); }
+            10% { transform: translate(-3px, -4px) rotate(-2deg) scale(1.1); }
+            20% { transform: translate(-5px, 0px) rotate(2deg) scale(1.1); }
+            30% { transform: translate(5px, 4px) rotate(0deg) scale(1.1); }
+            40% { transform: translate(3px, -3px) rotate(2deg) scale(1.1); }
+            50% { transform: translate(-3px, 4px) rotate(-2deg) scale(1.1); }
+            60% { transform: translate(-5px, 3px) rotate(0deg) scale(1.1); }
+            70% { transform: translate(5px, 3px) rotate(-2deg) scale(1.1); }
+            80% { transform: translate(-3px, -3px) rotate(2deg) scale(1.1); }
+            90% { transform: translate(3px, 4px) rotate(0deg) scale(1.1); }
+            100% { transform: translate(3px, -4px) rotate(-2deg) scale(1.1); }
+        }
+
+        #jumpscare img { 
+            height: 50vh; 
+            width: auto; 
+            object-fit: contain; 
+            animation: jumpscare-shake 0.1s infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" onclick="startExperience()">
+        <h1>HAZ CLIC PARA COMENZAR</h1>
+    </div>
+
+    <div class="hidden-player">
+        <div id="bg-music"></div>
+    </div>
+
+    <div class="hidden-player">
+        <div id="jumpscare-video-container"></div>
+    </div>
+
+    <div id="red-flash"></div>
+    <div id="emotes-container"></div>
+
+    <div id="game-container">
+        <h1 class="title">¿Perú o Marte?</h1>
+        <div id="counter">1/5</div>
+        <div class="image-wrapper">
+            <img id="main-image" src="" alt="Paisaje">
+            <div id="feedback">
+                <h3>¡ERROR!</h3>
+                <p id="feedback-text"></p>
+            </div>
+        </div>
+        <div class="buttons">
+            <button class="choice-btn" onclick="guess('peru')">Es Perú <img src="https://flagcdn.com/w20/pe.png" alt="Bandera Peru"></button>
+            <button class="choice-btn" onclick="guess('marte')">Es Marte 🪐</button>
+        </div>
+    </div>
+
+    <div id="final-popup">
+        <h2>NIVEL: RACISTA DE MANUAL</h2>
+        <img class="pepe" src="https://cdn.7tv.app/emote/01G038Y95G0006QCHD84CZS1JM/4x.avif" alt="Imagen final">
+        <p>RESULTADOS</p>
+        <p>Aciertos: <span id="final-correct-answers">0</span></p>
+        <p>Errores: <span>5</span></p>
+        <button id="easy-mode-btn" onclick="triggerJumpscare()">¿Te gustaría intentar el modo fácil?</button>
+    </div>
+
+    <div id="jumpscare">
+        <img src="https://cdn.7tv.app/emote/01KA27JAMM08A4749C539F7SPR/4x.avif" alt="Jumpscare">
+    </div>
+
+    <script>
+        let bgPlayer;
+        let jumpscarePlayer;
+        let currentVolume = 100;
+        let experienceStarted = false; // Nueva variable para solucionar la carga rápida
+
+        function onYouTubeIframeAPIReady() {
+            bgPlayer = new YT.Player('bg-music', {
+                height: '300', width: '300',
+                videoId: 'JpoxG6hxXSE',
+                playerVars: {
+                    'autoplay': 0, 'controls': 0,
+                    'start': 32,
+                    'loop': 1, 'playlist': 'JpoxG6hxXSE'
+                },
+                events: {
+                    'onReady': function(event) {
+                        // Si el usuario ya dio clic a EMPEZAR antes de que youtube cargara esto, reproducimos el audio inmediatamente.
+                        if (experienceStarted) {
+                            event.target.unMute();
+                            event.target.setVolume(currentVolume);
+                            event.target.playVideo();
+                        }
+                    }
+                }
+            });
+
+            jumpscarePlayer = new YT.Player('jumpscare-video-container', {
+                height: '300', width: '300',
+                videoId: 'yMnHP8M2zfw',
+                playerVars: {
+                    'autoplay': 0, 'controls': 0
+                }
+            });
+        }
+
+        let audioCtx;
+        function playErrorSound() {
+            if (!audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.type = 'square'; 
+            oscillator.frequency.setValueAtTime(400, audioCtx.currentTime); 
+            oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3); 
+            
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime); 
+            gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); 
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function startExperience() {
+            experienceStarted = true; // Avisamos que el juego ya empezó
+            document.getElementById('start-screen').style.opacity = "0";
+            setTimeout(() => {
+                document.getElementById('start-screen').style.display = "none";
+            }, 500);
+
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            // Si el reproductor de fondo ya cargó a tiempo, reproducimos ahora.
+            // Si no cargó a tiempo, el evento 'onReady' de arriba lo atrapará y lo reproducirá de todas formas.
+            if(bgPlayer && typeof bgPlayer.unMute === 'function') {
+                bgPlayer.unMute(); 
+                bgPlayer.setVolume(currentVolume);
+                bgPlayer.playVideo();
+            }
+        }
+
+        const images = [
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLHkvXdnowJJ46x5C_dwaJWS41KpqRwrxDDVYmnFL7Q6EfLIf3KHzEEsvH&s=10",
+            "https://i0.wp.com/nosolosputnik.com/wp-content/uploads/2024/07/curiosity-dingogap-nss.jpg?resize=800%2C450&ssl=1",
+            "https://resources.diariolibre.com/images/documents/10157/0/image_content_8340844_20170606195926-focus-0-0-608-342.jpg",
+            "https://imagenes.heraldo.es/files/image_1920_1080/uploads/imagenes/2025/03/26/video-nuevas-imagenes-de-la-superficie-de-marte-1.jpeg",
+            "https://fotografias-2.larazon.es/assets/2026/05/marte-superficie.jpg?width=1900&height=1069"
+        ];
+        const marteLocations = ["Cráter Gale, 5.4°S 137.8°E, Marte", "Valles Marineris, 13.7°S 59.2°W, Marte", "Monte Olimpo, 18.65°N 226.2°E, Marte"];
+        const peruLocations = ["Desierto de Sechura, Piura, Perú", "Dunas de Ica, Huacachina, Perú", "Desierto de Paracas, Ica, Perú"];
+
+        let currentIndex = 0;
+        let isAnimating = false;
+        const mainImage = document.getElementById("main-image");
+        const feedback = document.getElementById("feedback");
+        const feedbackText = document.getElementById("feedback-text");
+        const counterText = document.getElementById("counter");
+        const gameContainer = document.getElementById("game-container");
+        const redFlash = document.getElementById("red-flash");
+
+        mainImage.src = images[currentIndex];
+        counterText.innerText = `${currentIndex + 1}/${images.length}`;
+
+        function guess(choice) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            let randomMarte = marteLocations[Math.floor(Math.random() * marteLocations.length)];
+            let randomPeru = peruLocations[Math.floor(Math.random() * peruLocations.length)];
+
+            feedbackText.innerHTML = choice === 'peru' ? randomMarte : randomPeru;
+            feedback.classList.add("show");
+
+            playErrorSound();
+
+            redFlash.classList.add("flash-active");
+            gameContainer.classList.add("shake-active");
+            
+            // Bajar volumen
+            currentVolume -= 20;
+            if (currentVolume < 10) currentVolume = 10;
+            if(bgPlayer && typeof bgPlayer.setVolume === 'function') bgPlayer.setVolume(currentVolume);
+
+            setTimeout(() => {
+                redFlash.classList.remove("flash-active");
+                gameContainer.classList.remove("shake-active");
+            }, 400);
+
+            setTimeout(() => {
+                feedback.classList.remove("show");
+                currentIndex++;
+
+                if (currentIndex < images.length) {
+                    mainImage.style.opacity = 0;
+                    setTimeout(() => {
+                        mainImage.src = images[currentIndex];
+                        counterText.innerText = `${currentIndex + 1}/${images.length}`;
+                        mainImage.style.opacity = 1;
+                        isAnimating = false;
+                    }, 400);
+                } else {
+                    endGame();
+                }
+            }, 2500);
+        }
+
+        function endGame() {
+            const finalPopup = document.getElementById("final-popup");
+            const emotesContainer = document.getElementById("emotes-container");
+            
+            gameContainer.style.transform = "scale(0.8)";
+            gameContainer.style.opacity = "0";
+            emotesContainer.style.display = "none";
+
+            setTimeout(() => {
+                gameContainer.style.display = "none";
+                finalPopup.style.display = "flex";
+                setTimeout(() => finalPopup.style.opacity = "1", 50);
+            }, 500);
+        }
+
+        function triggerJumpscare() {
+            // Apagar música de fondo del primer video completamente
+            if(bgPlayer && typeof bgPlayer.stopVideo === 'function') {
+                bgPlayer.stopVideo();
+            }
+
+            document.getElementById("jumpscare").style.display = "flex";
+            
+            if(jumpscarePlayer && typeof jumpscarePlayer.unMute === 'function') {
+                jumpscarePlayer.unMute();
+                jumpscarePlayer.setVolume(100);
+                jumpscarePlayer.playVideo();
+            }
+        }
+
+        // Emotes originales (6)
+        const emoteData = [
+            { src: "https://cdn.7tv.app/emote/01G7NGR3R8000CY3BJ8KREXVPR/4x.avif", size: 100 },
+            { src: "https://cdn.7tv.app/emote/01G7NGR3R8000CY3BJ8KREXVPR/4x.avif", size: 100 },
+            { src: "https://cdn.7tv.app/emote/01J6N84V8000095HSJ1PN3XJ8Q/4x.avif", size: 100 },
+            { src: "https://cdn.7tv.app/emote/01J6N84V8000095HSJ1PN3XJ8Q/4x.avif", size: 100 },
+            { src: "https://cdn.7tv.app/emote/01J5M6ZZT00000V182Y1H9ZMZ9/4x.avif", size: 70 },
+            { src: "https://cdn.7tv.app/emote/01J5M6ZZT00000V182Y1H9ZMZ9/4x.avif", size: 70 }
+        ];
+
+        class FloatingEmote {
+            constructor(data) {
+                this.el = document.createElement("img");
+                this.el.src = data.src;
+                this.el.classList.add("emote");
+                this.size = data.size;
+                this.el.style.width = `${this.size}px`;
+                
+                this.x = Math.random() > 0.5 ? Math.random() * 100 : window.innerWidth - this.size - Math.random() * 100;
+                this.y = Math.random() > 0.5 ? Math.random() * 100 : window.innerHeight - this.size - Math.random() * 100;
+                
+                let speedMultiplier = 1 + Math.random() * 1.5;
+                this.dx = (Math.random() > 0.5 ? 1 : -1) * speedMultiplier;
+                this.dy = (Math.random() > 0.5 ? 1 : -1) * speedMultiplier;
+
+                document.getElementById("emotes-container").appendChild(this.el);
+            }
+
+            update() {
+                this.x += this.dx;
+                this.y += this.dy;
+
+                if (this.x <= 0 || this.x + this.size >= window.innerWidth) {
+                    this.dx *= -1;
+                    this.x = this.x <= 0 ? 0 : window.innerWidth - this.size;
+                    this.squish(0.7, 1.3);
+                }
+                if (this.y <= 0 || this.y + this.size >= window.innerHeight) {
+                    this.dy *= -1;
+                    this.y = this.y <= 0 ? 0 : window.innerHeight - this.size;
+                    this.squish(1.3, 0.7);
+                }
+
+                const container = document.getElementById("game-container");
+                if (container.style.display !== "none") {
+                    const rect = container.getBoundingClientRect();
+                    if (this.x < rect.right && this.x + this.size > rect.left &&
+                        this.y < rect.bottom && this.y + this.size > rect.top) {
+                        
+                        const overlapLeft = (this.x + this.size) - rect.left;
+                        const overlapRight = rect.right - this.x;
+                        const overlapTop = (this.y + this.size) - rect.top;
+                        const overlapBottom = rect.bottom - this.y;
+
+                        const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+
+                        if (minOverlap === overlapLeft || minOverlap === overlapRight) this.dx *= -1;
+                        if (minOverlap === overlapTop || minOverlap === overlapBottom) this.dy *= -1;
+
+                        this.x += this.dx * 2;
+                        this.y += this.dy * 2;
+                        this.squish(0.8, 1.2);
+                    }
+                }
+
+                this.el.style.left = `${this.x}px`;
+                this.el.style.top = `${this.y}px`;
+            }
+
+            squish(scaleX, scaleY) {
+                this.el.style.transform = `scale(${scaleX}, ${scaleY})`;
+                setTimeout(() => this.el.style.transform = `scale(1, 1)`, 150);
+            }
+        }
+
+        const emotes = emoteData.map(data => new FloatingEmote(data));
+
+        function animateEmotes() {
+            emotes.forEach(emote => emote.update());
+            requestAnimationFrame(animateEmotes);
+        }
+
+        window.addEventListener('resize', () => {
+            emotes.forEach(emote => {
+                if (emote.x + emote.size > window.innerWidth) emote.x = window.innerWidth - emote.size;
+                if (emote.y + emote.size > window.innerHeight) emote.y = window.innerHeight - emote.size;
+            });
+        });
+
+        animateEmotes();
+    </script>
+</body>
+</html>

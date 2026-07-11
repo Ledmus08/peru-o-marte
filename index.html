@@ -160,7 +160,6 @@
             z-index: 9999; background: black; display: none; justify-content: center; align-items: center;
         }
 
-        /* ANIMACIÓN DE SACUDIDA PARA EL JUMPSCARE */
         @keyframes jumpscare-shake {
             0% { transform: translate(3px, 3px) rotate(0deg) scale(1.1); }
             10% { transform: translate(-3px, -4px) rotate(-2deg) scale(1.1); }
@@ -233,7 +232,7 @@
         let bgPlayer;
         let jumpscarePlayer;
         let currentVolume = 100;
-        let experienceStarted = false; // Nueva variable para solucionar la carga rápida
+        let experienceStarted = false; 
 
         function onYouTubeIframeAPIReady() {
             bgPlayer = new YT.Player('bg-music', {
@@ -246,7 +245,7 @@
                 },
                 events: {
                     'onReady': function(event) {
-                        // Si el usuario ya dio clic a EMPEZAR antes de que youtube cargara esto, reproducimos el audio inmediatamente.
+
                         if (experienceStarted) {
                             event.target.unMute();
                             event.target.setVolume(currentVolume);
@@ -286,7 +285,7 @@
         }
 
         function startExperience() {
-            experienceStarted = true; // Avisamos que el juego ya empezó
+            experienceStarted = true; 
             document.getElementById('start-screen').style.opacity = "0";
             setTimeout(() => {
                 document.getElementById('start-screen').style.display = "none";
@@ -295,8 +294,7 @@
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
-            // Si el reproductor de fondo ya cargó a tiempo, reproducimos ahora.
-            // Si no cargó a tiempo, el evento 'onReady' de arriba lo atrapará y lo reproducirá de todas formas.
+
             if(bgPlayer && typeof bgPlayer.unMute === 'function') {
                 bgPlayer.unMute(); 
                 bgPlayer.setVolume(currentVolume);
@@ -341,7 +339,7 @@
             redFlash.classList.add("flash-active");
             gameContainer.classList.add("shake-active");
             
-            // Bajar volumen
+
             currentVolume -= 20;
             if (currentVolume < 10) currentVolume = 10;
             if(bgPlayer && typeof bgPlayer.setVolume === 'function') bgPlayer.setVolume(currentVolume);
@@ -385,7 +383,7 @@
         }
 
         function triggerJumpscare() {
-            // Apagar música de fondo del primer video completamente
+
             if(bgPlayer && typeof bgPlayer.stopVideo === 'function') {
                 bgPlayer.stopVideo();
             }
@@ -399,7 +397,7 @@
             }
         }
 
-        // Emotes originales (6)
+        
         const emoteData = [
             { src: "https://cdn.7tv.app/emote/01G7NGR3R8000CY3BJ8KREXVPR/4x.avif", size: 100 },
             { src: "https://cdn.7tv.app/emote/01G7NGR3R8000CY3BJ8KREXVPR/4x.avif", size: 100 },
